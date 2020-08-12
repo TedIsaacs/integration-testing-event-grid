@@ -1,0 +1,55 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "topicName": {
+      "type": "String"
+    },
+    "integrationTestProxySubscriptionName": {
+      "type": "String"
+    },
+    "integrationTestProxyStorageAccountRID": {
+      "type": "String"
+    },
+    "integrationTestProxyQueueName": {
+      "type": "String"
+    },
+    "location": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.EventGrid/topics",
+      "apiVersion": "2020-06-01",
+      "name": "[parameters('topicName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "inputSchema": "CloudEventSchemaV1_0"
+      }
+    },
+    {
+      "name": "[concat(parameters('topicName'),'/Microsoft.EventGrid/',parameters('integrationTestProxySubscriptionName'))]",
+      "type": "Microsoft.EventGrid/topics/providers/eventSubscriptions",
+      "location": "[parameters('location')]",
+      "apiVersion": "2020-06-01",
+      "properties": {
+        "destination": {
+          "endpointType": "StorageQueue",
+          "properties": {
+            "resourceId": "[parameters('integrationTestProxyStorageAccountRID')]",
+            "queueName": "[parameters('integrationTestProxyQueueName')]"
+          }
+        },
+        "filter": {
+          "includedEventTypes": [
+            "MyEvent"
+          ]
+        }
+      },
+      "dependsOn": [
+        "[parameters('topicName')]"
+      ]
+    }
+  ]
+}

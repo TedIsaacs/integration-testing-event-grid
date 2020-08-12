@@ -1,0 +1,52 @@
+- task: AzureCLI@1
+  displayName: 'Create storage queue'
+  inputs:
+    azureSubscription: 'My Subscription Connection'
+    scriptLocation: inlineScript
+    inlineScript: 'az storage queue create --name "eventsproxy" --account-name "integrationtests" --connection-string "myconnectionstring"'
+
+- task: AzureResourceGroupDeployment@3
+  displayName: 'Deploy Custom Resources'
+  inputs:
+    deploymentScope: 'Resource Group'
+    ConnectedServiceName: 'My Subscription Connection'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'my-resource-group-name'
+    csmFile: '$(Agent.BuildDirectory)/**/my-arm-template.json'
+    location: 'northeurope'
+    deploymentMode: 'Incremental'
+    overrideParameters: |
+      -topicName "my-topic-name"
+      -integrationTestProxySubscriptionName "integrationtest-proxy"
+      -integrationTestProxyStorageAccountRID "my/storage/RID"
+      -integrationTestProxyQueueName "eventsproxy"
+      -location "northeurope"
+
+- task: AzurePowerShell@5
+  inputs:
+  ConnectedServiceNameARM: 'My Subscription Connection'
+  displayName: 'Set Access Variables'
+  ScriptType: 'InlineScript'
+  azurePowerShellVersion: 'latestVersion'
+  pwsh: true
+  Inline: |
+    $topicKeys = Get-AzEventGridTopicKey -ResourceGroup "my-resource-group-name" -Name "my-topic-name"
+    $topic = Get-AzEventGridTopic -ResourceGroup "my-resource-group-name" -Name "my-topic-name"
+    $topicPrimKey = $topicKeys.Key1
+    $topicId = $topic.Id
+    $topicEndpoint = $topic.Endpoint
+    Write-Host "##vso[task.setvariable variable=EventGrid-Topics-TruService-Key]$topicPrimKey"
+    Write-Host "##vso[task.setvariable variable=EventGrid-Topics-TruService-Path]$topicId"
+    Write-Host "##vso[task.setvariable variable=EventGrid-Topics-TruService-Address]$topicEndpoint"
+
+- task: replacetokens@3
+  displayName: Replace Tokens
+  inputs:
+    rootDirectory: '$(Agent.BuildDirectory)'
+    targetFiles:  'testsettings.json'
+    actionOnMissing: 'warn'
+    keepToken: false
+    tokenPrefix: '{{'
+    tokenSuffix: '}}'
+    useLegacyPattern: false
+    enableTelemetry: true

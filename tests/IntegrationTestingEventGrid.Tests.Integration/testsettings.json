@@ -1,0 +1,11 @@
+﻿{
+  "EventGrid.MyTopic": {
+    "Address": "{{EventGrid-MyTopic-Address}}",
+    "Key": "{{EventGrid-MyTopic-Key}}",
+    "Path": "{{EventGrid-MyTopic-Path}}"
+  },
+  "StorageQueueTopicProxy": {
+    "StorageAccountConnectionString": "{{AzureStorage-IntegrationTests-ConnectionString}}",
+    "QueueName": "{{StorageQueueTopicProxy-Name}}"
+  }
+}
