@@ -1,3 +1,3 @@
 # Integration Testing Event Grid
 
-Companion to Medium article on integration testing Azure Event Grid using Storage Queue Subscriptions 
+Companion to Medium article on Deploying and Integration Testing Azure Event Grid
